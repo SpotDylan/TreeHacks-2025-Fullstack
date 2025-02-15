@@ -24,6 +24,7 @@
     "date-fns": "^4.1.0",
     "mapbox-gl": "^3.10.0",
     "mapbox-gl-style-switcher": "^1.0.11",
+    "mapbox.minimap": "^0.2.0",
     "next": "15.1.6",
     "next-mdx-remote": "^5.0.0",
     "react": "19.0.0",

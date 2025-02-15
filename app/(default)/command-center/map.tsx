@@ -1,41 +1,147 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { MapboxStyleSwitcherControl } from "mapbox-gl-style-switcher";
 import "mapbox-gl-style-switcher/styles.css";
 import "mapbox-gl/dist/mapbox-gl.css";
 
+// Constants for minimap
+const OVERVIEW_MIN_ZOOM = 8;
+const OVERVIEW_MAX_ZOOM = 16;
+const OVERVIEW_ZOOM_OFFSET = 4;
+
 const MapComponent = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
+  const minimapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const minimap = useRef<mapboxgl.Map | null>(null);
+  const [bounds, setBounds] = useState<mapboxgl.LngLatBounds | null>(null);
+
+  // Calculate the appropriate zoom level for the minimap
+  const buildOverviewZoom = (mainZoom: number): number => {
+    const zoomedOut = mainZoom - OVERVIEW_ZOOM_OFFSET;
+    return Math.min(Math.max(zoomedOut, OVERVIEW_MIN_ZOOM), OVERVIEW_MAX_ZOOM);
+  };
+
+  // Update minimap bounds visualization
+  const updateMinimapBounds = () => {
+    if (!map.current || !minimap.current) return;
+
+    const newBounds = map.current.getBounds();
+    if (!newBounds) return;
+    
+    setBounds(newBounds);
+
+    // Remove existing bounds layers
+    if (minimap.current.getSource('bounds')) {
+      minimap.current.removeLayer('bounds-fill');
+      minimap.current.removeLayer('bounds-outline');
+      minimap.current.removeSource('bounds');
+    }
+
+    try {
+      // Extract coordinates before using them to ensure type safety
+      const west = newBounds.getWest();
+      const south = newBounds.getSouth();
+      const east = newBounds.getEast();
+      const north = newBounds.getNorth();
+
+      // Add new bounds visualization
+      const coordinates: [number, number][] = [
+        [west, south],
+        [east, south],
+        [east, north],
+        [west, north],
+        [west, south]
+      ];
+
+      minimap.current.addSource('bounds', {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: {
+            type: 'Polygon',
+            coordinates: [coordinates]
+          },
+          properties: {}
+        }
+      });
+
+      minimap.current.addLayer({
+        id: 'bounds-fill',
+        type: 'fill',
+        source: 'bounds',
+        paint: {
+          'fill-color': '#0080ff',
+          'fill-opacity': 0.2
+        }
+      });
+
+      minimap.current.addLayer({
+        id: 'bounds-outline',
+        type: 'line',
+        source: 'bounds',
+        paint: {
+          'line-color': '#0080ff',
+          'line-width': 2
+        }
+      });
+    } catch (error) {
+      console.error('Error updating minimap bounds:', error);
+    }
+  };
 
   useEffect(() => {
-    if (map.current) return; // initialize map only once
-    if (!mapContainer.current) return; // wait for container to be ready
+    if (!mapContainer.current || !minimapContainer.current) return; // wait for containers to be ready
 
+    // Cleanup previous instances
+    if (map.current) {
+      map.current.remove();
+      map.current = null;
+    }
+    if (minimap.current) {
+      minimap.current.remove();
+      minimap.current = null;
+    }
+
+    // Initialize new instances
     mapboxgl.accessToken = "pk.eyJ1IjoiYnBhY2h1Y2EiLCJhIjoiY2lxbGNwaXdmMDAweGZxbmg5OGx2YWo5aSJ9.zda7KLJF3TH84UU6OhW16w";
     
-    // Initialize map with dark style
+    // Initialize main map
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/dark-v11",
-      zoom: 12
+      zoom: 14,
+      minZoom: 3,
+      maxZoom: 20
+    });
+
+    // Initialize minimap
+    minimap.current = new mapboxgl.Map({
+      container: minimapContainer.current,
+      style: "mapbox://styles/mapbox/dark-v11",
+      zoom: 10,
+      interactive: false // Disable minimap interaction
     });
 
     // Get user's location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          if (map.current) {
-            map.current.setCenter([position.coords.longitude, position.coords.latitude]);
+          const center: [number, number] = [position.coords.longitude, position.coords.latitude];
+          if (map.current && minimap.current) {
+            map.current.setCenter(center);
+            minimap.current.setCenter(center);
           }
         },
         (error) => {
           console.error("Error getting location:", error);
           // Default to San Francisco if location access is denied
-          if (map.current) {
-            map.current.setCenter([-122.174217, 37.427940]);
+          const defaultCenter: [number, number] = [-122.174217, 37.427940];
+          if (map.current && minimap.current) {
+            map.current.setCenter(defaultCenter);
+            minimap.current.setCenter(defaultCenter);
           }
         }
       );
@@ -43,25 +149,55 @@ const MapComponent = () => {
 
     map.current.addControl(new MapboxStyleSwitcherControl() as any);
 
-    // Cleanup on unmount
+    // Sync minimap with main map movements
+    map.current.on('move', () => {
+      if (map.current && minimap.current) {
+        const center = map.current.getCenter();
+        minimap.current.setCenter(center);
+        minimap.current.setZoom(buildOverviewZoom(map.current.getZoom()));
+        updateMinimapBounds();
+      }
+    });
+
     return () => {
       if (map.current) {
         map.current.remove();
+        map.current = null;
+      }
+      if (minimap.current) {
+        minimap.current.remove();
+        minimap.current = null;
       }
     };
   }, []);
 
   return (
-    <div 
-      ref={mapContainer} 
-      style={{ 
-        width: '100%', 
-        height: '350px',
-        borderRadius: '8px',
-        overflow: 'hidden',
-        marginLeft: '0'
-      }} 
-    />
+    <div style={{ position: 'relative' }}>
+      <div 
+        ref={mapContainer} 
+        style={{ 
+          width: '100%', 
+          height: '350px',
+          borderRadius: '8px',
+          overflow: 'hidden',
+          marginLeft: '0'
+        }} 
+      />
+      <div 
+        ref={minimapContainer} 
+        style={{ 
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          width: '150px',
+          height: '150px',
+          borderRadius: '4px',
+          overflow: 'hidden',
+          border: '2px solid rgba(0, 0, 0, 0.2)',
+          background: '#fff'
+        }} 
+      />
+    </div>
   );
 };
 
