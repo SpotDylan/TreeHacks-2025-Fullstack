@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Search from '@/components/search'
 
 interface Event {
   id: string
@@ -21,6 +22,7 @@ interface SoldierInfo {
     lat: number
     lng: number
   }
+  ppgWaveform: number[]
   // Medical Information
   weight: string
   height: string
@@ -74,6 +76,7 @@ export default function ReadStats({ soldier }: { soldier: SoldierInfo }) {
             <p>Blood Type: {soldier.bloodType}</p>
             <p>Allergies: {soldier.allergies.join(', ') || 'None'}</p>
             <p>Medications: {soldier.medications.join(', ') || 'None'}</p>
+            <p>Pre-existing Conditions: {soldier.preExistingConditions.join(', ') || 'None'}</p>
           </div>
         </div>
 
@@ -84,13 +87,23 @@ export default function ReadStats({ soldier }: { soldier: SoldierInfo }) {
           </h2>
           <div className="space-y-2 text-indigo-100/80">
             <p>Heart Rate: {soldier.heartRate} BPM</p>
+            <p className="text-sm text-indigo-300/60 mb-1">PPG Waveform</p>
+            <div className="h-16 w-full">
+              <svg className="h-full w-full" viewBox="0 0 200 100" preserveAspectRatio="none">
+                <path
+                  d={`M 0,50 ${soldier.ppgWaveform.map((value, index) => 
+                    `L ${(index * 200 / (soldier.ppgWaveform.length - 1))},${100 - value * 80}`
+                  ).join(' ')}`}
+                  stroke="rgb(99, 102, 241)"
+                  strokeWidth="2"
+                  fill="none"
+                />
+              </svg>
+            </div>
             <p>Last Ping: {soldier.lastPing.toLocaleString()}</p>
             <p>
               Location: {soldier.coordinates.lat.toFixed(6)},
               {soldier.coordinates.lng.toFixed(6)}
-            </p>
-            <p className="text-sm text-indigo-300/60">
-              Pre-existing: {soldier.preExistingConditions.join(', ') || 'None'}
             </p>
           </div>
         </div>
@@ -100,7 +113,9 @@ export default function ReadStats({ soldier }: { soldier: SoldierInfo }) {
           <h2 className="animate-[gradient_6s_linear_infinite] bg-[linear-gradient(to_right,var(--color-gray-200),var(--color-indigo-200),var(--color-gray-50),var(--color-indigo-300),var(--color-gray-200))] bg-[length:200%_auto] bg-clip-text pb-2 font-nacelle text-xl font-semibold text-transparent">
             Agent Controls
           </h2>
-          <div className="grid gap-2">
+          <div className="space-y-4">
+            <Search />
+            <div className="grid gap-2">
             <button
               onClick={() => handleAdministerAgent('Alpha')}
               disabled={isLoading}
@@ -122,6 +137,7 @@ export default function ReadStats({ soldier }: { soldier: SoldierInfo }) {
             >
               Administer Morphine
             </button>
+            </div>
           </div>
         </div>
       </div>

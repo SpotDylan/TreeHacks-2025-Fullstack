@@ -1,8 +1,12 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import PageIllustration from "@/components/page-illustration";
 import MapComponent from "./map";
 import EventCarousel from "./event-carousel";
 import SoldierTimeline from "@/components/soldier-timeline";
 import ReadStats from "@/components/read-stats";
+import { createClient } from "@/utils/supabase/client";
 
 // Mock data for demonstration
 const mockSoldier = {
@@ -16,6 +20,7 @@ const mockSoldier = {
     lat: 37.4275,
     lng: -122.1697
   },
+  ppgWaveform: [0.2, 0.3, 0.5, 0.8, 1.0, 0.8, 0.5, 0.3, 0.2, 0.1, 0.2, 0.3, 0.5, 0.8, 1.0, 0.8, 0.5, 0.3, 0.2, 0.1],
   // Medical Information
   weight: "180 lbs",
   height: "6'0\"",
@@ -70,12 +75,26 @@ const mockSoldier = {
   ]
 };
 
-export const metadata = {
-  title: "Aegis",
-  description: "Building biochemical agent delivery systems",
-};
-
 export default function CommandCenter() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase.auth]);
   return (
     <>
       <PageIllustration multiple />
