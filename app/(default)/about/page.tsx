@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "__INSERTNAME__",
+  title: "Aegis",
   description: "Building biochemical agent delivery systems",
 };
 

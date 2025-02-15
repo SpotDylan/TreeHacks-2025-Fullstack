@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "__INSERTNAME__",
+  title: "Aegis",
   description: "Building biochemical agent delivery systems",
 };
 
@@ -9,6 +9,7 @@ import Workflows from "@/components/workflows";
 import Features from "@/components/features";
 import Pricing from "@/components/pricing-home";
 import SplitCarousel from "@/components/split-carousel";
+import Founders from "@/components/founders";
 import Cta from "@/components/cta";
 
 export default function Home() {
@@ -19,8 +20,9 @@ export default function Home() {
       <Workflows />
       <Features />
       <SplitCarousel />
-      <Pricing />
-      <Cta />
+      <Founders />
+      {/* <Pricing />
+      <Cta /> */}
     </>
   );
 }

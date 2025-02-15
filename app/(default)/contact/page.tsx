@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "__INSERTNAME__",
+  title: "Aegis",
   description: "Building biochemical agent delivery systems",
 };
 
@@ -15,167 +15,105 @@ export default function Contact() {
           <div className="py-12 md:py-20">
             {/* Section header */}
             <div className="pb-12 text-center">
-              <h1 className="animate-[gradient_6s_linear_infinite] bg-[linear-gradient(to_right,var(--color-gray-200),var(--color-indigo-200),var(--color-gray-50),var(--color-indigo-300),var(--color-gray-200))] bg-[length:200%_auto] bg-clip-text pb-5 font-nacelle text-4xl font-semibold text-transparent md:text-5xl">
+              <h1 
+                className="animate-[gradient_6s_linear_infinite] bg-[linear-gradient(to_right,var(--color-gray-200),var(--color-indigo-200),var(--color-gray-50),var(--color-indigo-300),var(--color-gray-200))] bg-[length:200%_auto] bg-clip-text pb-5 font-nacelle text-4xl font-semibold text-transparent md:text-5xl"
+                data-aos="fade-up"
+              >
                 Contact us
               </h1>
               <div className="mx-auto max-w-3xl">
-                <p className="text-xl text-indigo-200/65">
-                  We have custom plans to power your business. Tell us your
-                  needs, and we'll contact you shortly.
+                <p className="text-xl text-indigo-200/65" data-aos="fade-up" data-aos-delay={200}>
+                  Meet our team! Feel free to reach out to any of us with questions about Aegis or our work.
                 </p>
               </div>
             </div>
-            {/* Contact form */}
-            <form className="mx-auto max-w-[640px]">
-              <div className="space-y-5">
-                <div className="flex flex-col gap-x-6 gap-y-4 md:flex-row">
-                  <div className="flex-1">
-                    <label
-                      className="mb-1 block text-sm font-medium text-indigo-200/65"
-                      htmlFor="first-name"
-                    >
-                      Name
-                    </label>
-                    <input
-                      id="first-name"
-                      type="text"
-                      className="form-input w-full"
-                      placeholder="Your name"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label
-                      className="mb-1 block text-sm font-medium text-indigo-200/65"
-                      htmlFor="last-name"
-                    >
-                      Surname
-                    </label>
-                    <input
-                      id="last-name"
-                      type="text"
-                      className="form-input w-full"
-                      placeholder="Your surname"
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-x-6 gap-y-4 md:flex-row">
-                  <div className="flex-1">
-                    <label
-                      className="mb-1 block text-sm font-medium text-indigo-200/65"
-                      htmlFor="email"
-                    >
-                      Email
-                    </label>
-                    <input
-                      id="email"
-                      type="email"
-                      className="form-input w-full"
-                      placeholder="Enter your email address"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label
-                      className="mb-1 block text-sm font-medium text-indigo-200/65"
-                      htmlFor="country"
-                    >
-                      Country
-                    </label>
-                    <select
-                      id="country"
-                      className="form-select w-full text-gray-200"
-                      defaultValue={"default"}
-                    >
-                      <option value={"default"} disabled hidden>
-                        Select a country
-                      </option>
-                      <option>United States</option>
-                      <option>United Kingdom</option>
-                      <option>Germany</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-x-6 gap-y-4 md:flex-row">
-                  <div className="flex-1">
-                    <label
-                      className="mb-1 block text-sm font-medium text-indigo-200/65"
-                      htmlFor="topic"
-                    >
-                      Topic
-                    </label>
-                    <select
-                      id="topic"
-                      className="form-select w-full text-gray-200"
-                      defaultValue={"default"}
-                    >
-                      <option value={"default"} disabled hidden>
-                        Select a topic
-                      </option>
-                      <option>General</option>
-                      <option>Business</option>
-                      <option>Finance</option>
-                      <option>Health</option>
-                      <option>Legal</option>
-                      <option>Marketing</option>
-                      <option>Productivity</option>
-                      <option>Security</option>
-                      <option>Software</option>
-                      <option>Travel</option>
-                    </select>
-                  </div>
-                  <div className="flex-1">
-                    <label
-                      className="mb-1 block text-sm font-medium text-indigo-200/65"
-                      htmlFor="subject"
-                    >
-                      Subject
-                    </label>
-                    <input
-                      id="subject"
-                      type="text"
-                      className="form-input w-full"
-                      placeholder="Let us know how we can help"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label
-                    className="mb-1 block text-sm font-medium text-indigo-200/65"
-                    htmlFor="description"
-                  >
-                    Full description
-                  </label>
-                  <textarea
-                    id="description"
-                    rows={5}
-                    className="form-textarea w-full text-gray-200"
-                    placeholder="Include as much details as you can"
-                    defaultValue={""}
+            {/* Team grid */}
+            <div className="mx-auto grid max-w-sm gap-8 sm:max-w-4xl sm:grid-cols-2 lg:max-w-5xl lg:grid-cols-4">
+              {/* Team member 1 */}
+              <div className="flex flex-col items-center" data-aos="fade-up" data-aos-delay={400}>
+                <div className="mb-4 h-40 w-40 overflow-hidden rounded-full">
+                  <img
+                    src="/images/treehacks_anshA_pfp.jpeg"
+                    alt="Team member"
+                    className="h-full w-full object-cover"
                   />
                 </div>
+                <h3 className="mb-2 text-xl font-semibold text-gray-200">Ansh Agrawal</h3>
+                <p className="mb-4 text-center text-sm text-indigo-200/65">University of Toronto</p>
+                <a
+                  href="mailto:ansh.agrawal@utoronto.ca"
+                  className="inline-flex items-center text-sm text-indigo-500 hover:text-indigo-400"
+                >
+                  Contact
+                  <svg className="ml-2 h-3 w-3 fill-current" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.602 11l-.875-.864L9.33 6.534H0v-1.25h9.33L5.727 1.693l.875-.875L11.5 5.719z" />
+                  </svg>
+                </a>
               </div>
-              <div className="mt-8 flex w-full flex-col justify-between gap-5 md:flex-row md:items-center">
-                <p className="text-sm text-indigo-200/65">
-                  By continuing, you agree to our{" "}
-                  <a className="underline hover:no-underline" href="#0">
-                    Terms of Use
-                  </a>{" "}
-                  and{" "}
-                  <a className="underline hover:no-underline" href="#0">
-                    Privacy policy
-                  </a>
-                </p>
-                <div>
-                  <button className="btn group w-full bg-linear-to-t from-indigo-600 to-indigo-500 bg-[length:100%_100%] bg-[bottom] text-white shadow-[inset_0px_1px_0px_0px_--theme(--color-white/.16)] hover:bg-[length:100%_150%]">
-                    <span className="relative inline-flex items-center">
-                      Send
-                      <span className="ml-1 tracking-normal text-white/50 transition-transform group-hover:translate-x-0.5">
-                        -&gt;
-                      </span>
-                    </span>
-                  </button>
+              {/* Team member 2 */}
+              <div className="flex flex-col items-center" data-aos="fade-up" data-aos-delay={600}>
+                <div className="mb-4 h-40 w-40 overflow-hidden rounded-full">
+                  <img
+                    src="/images/treehacks_dylan_pfp.jpeg"
+                    alt="Team member"
+                    className="h-full w-full object-cover"
+                  />
                 </div>
+                <h3 className="mb-2 text-xl font-semibold text-gray-200">Dylan Nguyen</h3>
+                <p className="mb-4 text-center text-sm text-indigo-200/65">Massachusetts Institute of Technology</p>
+                <a
+                  href="mailto:dynguyen@mit.edu"
+                  className="inline-flex items-center text-sm text-indigo-500 hover:text-indigo-400"
+                >
+                  Contact
+                  <svg className="ml-2 h-3 w-3 fill-current" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.602 11l-.875-.864L9.33 6.534H0v-1.25h9.33L5.727 1.693l.875-.875L11.5 5.719z" />
+                  </svg>
+                </a>
               </div>
-            </form>
+              {/* Team member 3 */}
+              <div className="flex flex-col items-center" data-aos="fade-up" data-aos-delay={800}>
+                <div className="mb-4 h-40 w-40 overflow-hidden rounded-full">
+                  <img
+                    src="/images/treehacks_rithvik_pfp.jpeg"
+                    alt="Team member"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <h3 className="mb-2 text-xl font-semibold text-gray-200">Rithvik Gabri</h3>
+                <p className="mb-4 text-center text-sm text-indigo-200/65">Stanford University</p>
+                <a
+                  href="mailto:rithvik@stanford.edu"
+                  className="inline-flex items-center text-sm text-indigo-500 hover:text-indigo-400"
+                >
+                  Contact
+                  <svg className="ml-2 h-3 w-3 fill-current" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.602 11l-.875-.864L9.33 6.534H0v-1.25h9.33L5.727 1.693l.875-.875L11.5 5.719z" />
+                  </svg>
+                </a>
+              </div>
+              {/* Team member 4 */}
+              <div className="flex flex-col items-center" data-aos="fade-up" data-aos-delay={1000}>
+                <div className="mb-4 h-40 w-40 overflow-hidden rounded-full">
+                  <img
+                    src="/images/treehacks_anshS_pfp.jpeg"
+                    alt="Team member"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <h3 className="mb-2 text-xl font-semibold text-gray-200">Ansh Sheth</h3>
+                <p className="mb-4 text-center text-sm text-indigo-200/65">Stanford University</p>
+                <a
+                  href="mailto:anshs@stanford.edu"
+                  className="inline-flex items-center text-sm text-indigo-500 hover:text-indigo-400"
+                >
+                  Contact
+                  <svg className="ml-2 h-3 w-3 fill-current" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.602 11l-.875-.864L9.33 6.534H0v-1.25h9.33L5.727 1.693l.875-.875L11.5 5.719z" />
+                  </svg>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </section>

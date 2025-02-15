@@ -1,23 +1,54 @@
-export const metadata = {
-  title: "__INSERTNAME__",
-  description: "Building biochemical agent delivery systems",
-};
+"use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 
 export default function SignIn() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const supabase = createClient();
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        router.push("/command-center");
+        router.refresh();
+      }
+    } catch (err) {
+      setError("An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <section>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="py-12 md:py-20">
           {/* Section header */}
-          <div className="pb-12 text-center">
+          <div className="animate-fade-up pb-12 text-center opacity-0 [--animation-delay:200ms]">
             <h1 className="animate-[gradient_6s_linear_infinite] bg-[linear-gradient(to_right,var(--color-gray-200),var(--color-indigo-200),var(--color-gray-50),var(--color-indigo-300),var(--color-gray-200))] bg-[length:200%_auto] bg-clip-text font-nacelle text-3xl font-semibold text-transparent md:text-4xl">
               Welcome back
             </h1>
           </div>
           {/* Contact form */}
-          <form className="mx-auto max-w-[400px]">
+          <form onSubmit={handleSignIn} className="animate-fade-up mx-auto max-w-[400px] opacity-0 [--animation-delay:400ms]">
             <div className="space-y-5">
               <div>
                 <label
@@ -31,6 +62,9 @@ export default function SignIn() {
                   type="email"
                   className="form-input w-full"
                   placeholder="Your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
               <div>
@@ -53,27 +87,31 @@ export default function SignIn() {
                   type="password"
                   className="form-input w-full"
                   placeholder="Your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
               </div>
             </div>
             <div className="mt-6 space-y-5">
-              <button className="btn w-full bg-linear-to-t from-indigo-600 to-indigo-500 bg-[length:100%_100%] bg-[bottom] text-white shadow-[inset_0px_1px_0px_0px_--theme(--color-white/.16)] hover:bg-[length:100%_150%]">
-                Sign in
-              </button>
-              <div className="flex items-center gap-3 text-center text-sm italic text-gray-600 before:h-px before:flex-1 before:bg-linear-to-r before:from-transparent before:via-gray-400/25 after:h-px after:flex-1 after:bg-linear-to-r after:from-transparent after:via-gray-400/25">
-                or
-              </div>
-              <button className="btn relative w-full bg-linear-to-b from-gray-800 to-gray-800/60 bg-[length:100%_100%] bg-[bottom] text-gray-300 before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(to_right,var(--color-gray-800),var(--color-gray-700),var(--color-gray-800))_border-box] before:[mask-composite:exclude_!important] before:[mask:linear-gradient(white_0_0)_padding-box,_linear-gradient(white_0_0)] hover:bg-[length:100%_150%]">
-                Sign In with Google
+              <button 
+                type="submit"
+                disabled={loading}
+                className="btn w-full bg-linear-to-t from-indigo-600 to-indigo-500 bg-[length:100%_100%] bg-[bottom] text-white shadow-[inset_0px_1px_0px_0px_--theme(--color-white/.16)] hover:bg-[length:100%_150%] disabled:opacity-50"
+              >
+                {loading ? "Signing in..." : "Sign in"}
               </button>
             </div>
           </form>
+          {/* Error message */}
+          {error && (
+            <div className="animate-fade-up mt-4 text-center text-sm text-red-500 opacity-0 [--animation-delay:0ms]">
+              {error}
+            </div>
+          )}
           {/* Bottom link */}
-          <div className="mt-6 text-center text-sm text-indigo-200/65">
-            Don't you have an account?{" "}
-            <Link className="font-medium text-indigo-500" href="/signup">
-              Sign Up
-            </Link>
+          <div className="animate-fade-up mt-6 text-center text-sm text-indigo-200/65 opacity-0 [--animation-delay:600ms]">
+            This sign in page is for our demo page. We're not accepting registrations at this time.
           </div>
         </div>
       </div>

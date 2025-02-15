@@ -21,7 +21,7 @@ export default function HeroHome() {
                 data-aos="fade-up"
                 data-aos-delay={200}
               >
-                __INSERTNAME__ delivers vital biochemical agents in real-time, tailored to your unique biometric signals.
+                Aegis delivers vital biochemical agents in real-time, tailored to your unique biometric signals.
               </p>
               <div className="mx-auto max-w-xs sm:flex sm:max-w-none sm:justify-center">
                 <div data-aos="fade-up" data-aos-delay={400}>
