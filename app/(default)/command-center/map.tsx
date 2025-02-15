@@ -1,4 +1,4 @@
-'use client';
+        'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
@@ -130,31 +130,69 @@ const MapComponent = () => {
     Promise.all([
       new Promise(resolve => map.current?.on('style.load', resolve)),
       new Promise(resolve => minimap.current?.on('style.load', resolve))
-    ]).then(() => {
-      // Get user's location
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const center: [number, number] = [position.coords.longitude, position.coords.latitude];
-            if (map.current && minimap.current) {
-              map.current.setCenter(center);
-              minimap.current.setCenter(center);
-              // Add pulsing dot at user's location
-              addPulsingDot(map.current, center);
-            }
-          },
-          (error) => {
-            console.error("Error getting location:", error);
-            // defaults you to lahore pakistan if location access is denied
-            const defaultCenter: [number, number] = [31.5204, 74.3587];
-            if (map.current && minimap.current) {
-              map.current.setCenter(defaultCenter);
-              minimap.current.setCenter(defaultCenter);
-              // Add pulsing dot at default location
-              addPulsingDot(map.current, defaultCenter);
+    ]).then(async () => {
+      // Initial ISS location fetch
+      const getISSLocation = async () => {
+        try {
+          const response = await fetch(
+            'https://api.wheretheiss.at/v1/satellites/25544',
+            { method: 'GET' }
+          );
+          const { latitude, longitude } = await response.json();
+          return [longitude, latitude] as [number, number];
+        } catch (err) {
+          console.error('Error fetching ISS location:', err);
+          return [0, 0] as [number, number];
+        }
+      };
+
+      // Get initial position and set up map
+      const initialPosition = await getISSLocation();
+      
+      if (map.current && minimap.current) {
+        map.current.setCenter(initialPosition);
+        minimap.current.setCenter(initialPosition);
+        map.current.setZoom(2); // Set zoom level for global view
+        minimap.current.setZoom(1);
+        
+        // Add pulsing dot at ISS location
+        addPulsingDot(map.current, initialPosition);
+
+        // Update ISS position every 2 seconds
+        const updateInterval = setInterval(async () => {
+          const newPosition = await getISSLocation();
+          
+          if (map.current && minimap.current) {
+            // Update the dot's position
+            const source = map.current.getSource('dot-point') as mapboxgl.GeoJSONSource;
+            if (source) {
+              source.setData({
+                type: 'FeatureCollection',
+                features: [
+                  {
+                    type: 'Feature',
+                    geometry: {
+                      type: 'Point',
+                      coordinates: newPosition
+                    },
+                    properties: {}
+                  }
+                ]
+              });
+
+              // Fly to new position
+              map.current.flyTo({
+                center: newPosition,
+                speed: 0.5
+              });
+              
+              minimap.current.setCenter(newPosition);
             }
           }
-        );
+        }, 2000);
+
+        // Cleanup interval on unmount
+        return () => clearInterval(updateInterval);
       }
 
       map.current?.addControl(new MapboxStyleSwitcherControl() as any);
