@@ -5,6 +5,7 @@ import mapboxgl from 'mapbox-gl';
 import { MapboxStyleSwitcherControl } from "mapbox-gl-style-switcher";
 import "mapbox-gl-style-switcher/styles.css";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { addPulsingDot } from '@/components/PulsingTracker';
 
 // Constants for minimap
 const OVERVIEW_MIN_ZOOM = 8;
@@ -138,6 +139,8 @@ const MapComponent = () => {
             if (map.current && minimap.current) {
               map.current.setCenter(center);
               minimap.current.setCenter(center);
+              // Add pulsing dot at user's location
+              addPulsingDot(map.current, center);
             }
           },
           (error) => {
@@ -147,6 +150,8 @@ const MapComponent = () => {
             if (map.current && minimap.current) {
               map.current.setCenter(defaultCenter);
               minimap.current.setCenter(defaultCenter);
+              // Add pulsing dot at default location
+              addPulsingDot(map.current, defaultCenter);
             }
           }
         );
@@ -190,7 +195,6 @@ const MapComponent = () => {
           overflow: 'hidden',
           marginLeft: '0',
           padding: '2px',
-          background: 'linear-gradient(to bottom, rgb(17, 24, 39), rgb(88, 28, 135))',
           boxSizing: 'border-box'
         }} 
       >
