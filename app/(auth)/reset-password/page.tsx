@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Reset Password - Open PRO",
-  description: "Page description",
+  title: "__INSERTNAME__",
+  description: "Building biochemical agent delivery systems",
 };
 
 import Link from "next/link";

@@ -1,5 +1,5 @@
 import { getBlogPosts } from "@/components/mdx/utils";
-import PostItem from "../app/(default)/blog/post-item";
+import PostItem from "../app/(default)/command-center/post-item";
 
 export default function News() {
   const allBlogs = getBlogPosts();

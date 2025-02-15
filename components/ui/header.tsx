@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import Logo from "./logo";
-import Dropdown from "@/components/dropdown";
 import MobileMenu from "./mobile-menu";
 
 export default function Header() {
@@ -19,14 +18,7 @@ export default function Header() {
           <nav className="hidden md:flex md:grow">
             {/* Desktop menu links */}
             <ul className="flex grow flex-wrap items-center justify-center gap-4 text-sm lg:gap-8">
-              <li>
-                <Link
-                  href="/pricing"
-                  className="flex items-center px-2 py-1 text-gray-200 transition hover:text-indigo-500 lg:px-3"
-                >
-                  Pricing
-                </Link>
-              </li>
+
               <li>
                 <Link
                   href="/about"
@@ -37,10 +29,10 @@ export default function Header() {
               </li>
               <li>
                 <Link
-                  href="/blog"
+                  href="/command-center"
                   className="flex items-center px-2 py-1 text-gray-200 transition hover:text-indigo-500 lg:px-3"
                 >
-                  Blog
+                  Command Center
                 </Link>
               </li>
               <li>
@@ -51,34 +43,14 @@ export default function Header() {
                   Help Centre
                 </Link>
               </li>
-              {/* 1st level: hover */}
-              <Dropdown title="Resources">
-                {/* 2nd level: hover */}
-                <li>
-                  <Link
-                    href="/newsletter"
-                    className="flex rounded-lg px-2 py-1.5 text-sm text-white hover:text-indigo-500"
-                  >
-                    Newsletter
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/contact"
-                    className="flex rounded-lg px-2 py-1.5 text-sm text-white hover:text-indigo-500"
-                  >
-                    Contact Us
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/404"
-                    className="flex rounded-lg px-2 py-1.5 text-sm text-white hover:text-indigo-500"
-                  >
-                    404
-                  </Link>
-                </li>
-              </Dropdown>
+              <li>
+                <Link
+                  href="/contact"
+                  className="flex items-center px-2 py-1 text-gray-200 transition hover:text-indigo-500 lg:px-3"
+                >
+                  Contact Us
+                </Link>
+              </li>
             </ul>
           </nav>
 

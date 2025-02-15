@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Sign In - Open PRO",
-  description: "Page description",
+  title: "__INSERTNAME__",
+  description: "Building biochemical agent delivery systems",
 };
 
 import Link from "next/link";

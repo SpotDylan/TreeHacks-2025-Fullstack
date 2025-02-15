@@ -2,11 +2,11 @@ import { getBlogPosts } from "@/components/mdx/utils";
 import CategoryProvider from "./category-provider";
 import PageIllustration from "@/components/page-illustration";
 import BlogFilters from "./filters";
-import PostItem from "@/app/(default)/blog/post-item";
+import PostItem from "@/app/(default)/command-center/post-item";
 
 export const metadata = {
-  title: "Blog - Open PRO",
-  description: "Page description",
+  title: "__INSERTNAME__",
+  description: "Building biochemical agent delivery systems",
 };
 
 import Cta from "@/components/cta";

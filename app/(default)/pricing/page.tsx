@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Pricing - Open PRO",
-  description: "Page description",
+  title: "__INSERTNAME__",
+  description: "Building biochemical agent delivery systems",
 };
 
 import PageIllustration from "@/components/page-illustration";
