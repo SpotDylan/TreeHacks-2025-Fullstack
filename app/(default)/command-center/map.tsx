@@ -84,7 +84,7 @@ const MapComponent = () => {
         source: 'bounds',
         paint: {
           'line-color': '#0080ff',
-          'line-width': 2
+          'line-width': 0.5
         }
       });
     } catch (error) {
@@ -125,38 +125,47 @@ const MapComponent = () => {
       interactive: false // Disable minimap interaction
     });
 
-    // Get user's location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const center: [number, number] = [position.coords.longitude, position.coords.latitude];
-          if (map.current && minimap.current) {
-            map.current.setCenter(center);
-            minimap.current.setCenter(center);
+    // Wait for both maps to load
+    Promise.all([
+      new Promise(resolve => map.current?.on('style.load', resolve)),
+      new Promise(resolve => minimap.current?.on('style.load', resolve))
+    ]).then(() => {
+      // Get user's location
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const center: [number, number] = [position.coords.longitude, position.coords.latitude];
+            if (map.current && minimap.current) {
+              map.current.setCenter(center);
+              minimap.current.setCenter(center);
+            }
+          },
+          (error) => {
+            console.error("Error getting location:", error);
+            // defaults you to lahore pakistan if location access is denied
+            const defaultCenter: [number, number] = [31.5204, 74.3587];
+            if (map.current && minimap.current) {
+              map.current.setCenter(defaultCenter);
+              minimap.current.setCenter(defaultCenter);
+            }
           }
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          // Default to San Francisco if location access is denied
-          const defaultCenter: [number, number] = [-122.174217, 37.427940];
-          if (map.current && minimap.current) {
-            map.current.setCenter(defaultCenter);
-            minimap.current.setCenter(defaultCenter);
-          }
-        }
-      );
-    }
-
-    map.current.addControl(new MapboxStyleSwitcherControl() as any);
-
-    // Sync minimap with main map movements
-    map.current.on('move', () => {
-      if (map.current && minimap.current) {
-        const center = map.current.getCenter();
-        minimap.current.setCenter(center);
-        minimap.current.setZoom(buildOverviewZoom(map.current.getZoom()));
-        updateMinimapBounds();
+        );
       }
+
+      map.current?.addControl(new MapboxStyleSwitcherControl() as any);
+
+      // Initial bounds update
+      updateMinimapBounds();
+
+      // Sync minimap with main map movements
+      map.current?.on('move', () => {
+        if (map.current && minimap.current) {
+          const center = map.current.getCenter();
+          minimap.current.setCenter(center);
+          minimap.current.setZoom(buildOverviewZoom(map.current.getZoom()));
+          updateMinimapBounds();
+        }
+      });
     });
 
     return () => {
@@ -174,15 +183,27 @@ const MapComponent = () => {
   return (
     <div style={{ position: 'relative' }}>
       <div 
-        ref={mapContainer} 
         style={{ 
           width: '100%', 
-          height: '350px',
-          borderRadius: '8px',
+          height: '550px',
+          borderRadius: '12px',
           overflow: 'hidden',
-          marginLeft: '0'
+          marginLeft: '0',
+          padding: '2px',
+          background: 'linear-gradient(to bottom, rgb(17, 24, 39), rgb(88, 28, 135))',
+          boxSizing: 'border-box'
         }} 
-      />
+      >
+        <div 
+          ref={mapContainer}
+          style={{
+            width: '100%',
+            height: '100%',
+            borderRadius: '6px',
+            overflow: 'hidden'
+          }}
+        />
+      </div>
       <div 
         ref={minimapContainer} 
         style={{ 
