@@ -15,7 +15,7 @@ const mockSoldier = {
   rank: "Staff Sergeant",
   unit: "1st Special Forces Group",
   heartRate: 72,
-  lastPing: new Date(),
+  lastPing: new Date('2024-02-16T11:50:00Z'),
   coordinates: {
     lat: 37.4275,
     lng: -122.1697

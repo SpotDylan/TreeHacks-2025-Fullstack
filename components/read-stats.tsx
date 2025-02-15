@@ -100,10 +100,10 @@ export default function ReadStats({ soldier }: { soldier: SoldierInfo }) {
                 />
               </svg>
             </div>
-            <p>Last Ping: {soldier.lastPing.toLocaleString()}</p>
+            <p>Last Ping: {new Date(soldier.lastPing).toISOString()}</p>
             <p>
-              Location: {soldier.coordinates.lat.toFixed(6)},
-              {soldier.coordinates.lng.toFixed(6)}
+              Location: {Number(soldier.coordinates.lat).toFixed(6)},
+              {Number(soldier.coordinates.lng).toFixed(6)}
             </p>
           </div>
         </div>
