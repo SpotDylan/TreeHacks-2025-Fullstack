@@ -7,19 +7,6 @@ interface LocationUpdate {
 
 const API_KEY = process.env.LOCATION_API_KEY;
 
-// Add CORS headers helper
-function corsHeaders() {
-  return {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  };
-}
-
-// Handle OPTIONS request for CORS
-export async function OPTIONS() {
-  return NextResponse.json({}, { headers: corsHeaders() });
-}
 
 export async function POST(req: NextRequest) {
   console.log('POST request received:', {
@@ -28,9 +15,7 @@ export async function POST(req: NextRequest) {
   });
 
   try {
-    // Add CORS headers to all responses
     const headers = {
-      ...corsHeaders(),
       'Content-Type': 'application/json',
     };
 
@@ -107,7 +92,6 @@ export async function POST(req: NextRequest) {
       { 
         status: 500,
         headers: {
-          ...corsHeaders(),
           'Content-Type': 'application/json',
         }
       }
@@ -121,7 +105,6 @@ export async function GET() {
     { 
       status: 501,
       headers: {
-        ...corsHeaders(),
         'Content-Type': 'application/json',
       }
     }
