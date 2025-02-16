@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, useRef, useEffect } from "react";
+import { Fragment, useState, useRef, useEffect, useCallback } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 
 interface SearchModalProps {
@@ -108,7 +108,58 @@ export default function SearchModal({ isOpen, setIsOpen }: SearchModalProps) {
                               : 'bg-gray-700 text-gray-200'
                           }`}
                         >
-                          {message.content}
+                          <div>
+                            <div className="mb-2">{message.content}</div>
+                            {message.role === 'assistant' && (
+                              <div>
+                                <button
+                                  onClick={async (e) => {
+                                    e.preventDefault();
+                                    const button = e.currentTarget;
+                                    try {
+                                      button.disabled = true;
+                                      button.innerHTML = 'Generating audio...';
+                                      
+                                      const response = await fetch('/api/speech/', {
+                                        method: 'POST',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({
+                                          text: message.content,
+                                        }),
+                                      });
+
+                                      if (!response.ok) {
+                                        throw new Error('Failed to generate speech');
+                                      }
+
+                                      const audioBlob = await response.blob();
+                                      const audioUrl = URL.createObjectURL(audioBlob);
+                                      const audio = new Audio(audioUrl);
+                                      await audio.play();
+                                    } catch (error) {
+                                      console.error('Error playing audio:', error);
+                                    } finally {
+                                      button.disabled = false;
+                                      button.innerHTML = `
+                                        <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                                          <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 001.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06zM18.584 5.106a.75.75 0 011.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 11-1.06-1.06 8.25 8.25 0 000-11.668.75.75 0 010-1.06z" />
+                                        </svg>
+                                        Play Audio
+                                      `;
+                                    }
+                                  }}
+                                  className="flex items-center px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors mt-2"
+                                >
+                                  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 001.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06zM18.584 5.106a.75.75 0 011.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 11-1.06-1.06 8.25 8.25 0 000-11.668.75.75 0 010-1.06z" />
+                                  </svg>
+                                  Play Audio
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
