@@ -1,0 +1,15 @@
+{
+  "originHash" : "978c143221f0b15c398f7422222481733fd602e46b7533e46c6bbe5d544a5939",
+  "pins" : [
+    {
+      "identity" : "terrartios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/tryterra/TerraRTiOS",
+      "state" : {
+        "revision" : "4180031cf5210484518ce98b7b329fe83ebe433f",
+        "version" : "0.3.8"
+      }
+    }
+  ],
+  "version" : 3
+}
