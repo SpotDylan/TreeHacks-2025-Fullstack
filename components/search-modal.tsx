@@ -40,7 +40,7 @@ export default function SearchModal({ isOpen, setIsOpen }: SearchModalProps) {
     const recentMessages = messages.slice(-4);
     
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/chat/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
