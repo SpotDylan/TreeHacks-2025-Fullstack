@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { Analytics } from "@vercel/analytics/react"
 
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -24,7 +25,7 @@ export default function DefaultLayout({
   return (
     <>
       <main className="relative flex grow flex-col">{children}</main>
-
+      <Analytics/>
       <Footer />
     </>
   );
