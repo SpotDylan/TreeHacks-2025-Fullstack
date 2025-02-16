@@ -47,9 +47,9 @@ export default function ModalVideo({
       {/* Video thumbnail */}
       <button
         className="group relative flex items-center justify-center rounded-2xl focus:outline-hidden focus-visible:ring-3 focus-visible:ring-indigo-200"
-        onClick={() => {
-          setModalOpen(true);
-        }}
+        // onClick={() => {
+        //   setModalOpen(true);
+        // }}
         aria-label="Watch the video"
         data-aos="fade-up"
         data-aos-delay={200}
@@ -67,7 +67,7 @@ export default function ModalVideo({
         {/* Play icon */}
         <span className="pointer-events-none absolute p-2.5 before:absolute before:inset-0 before:rounded-full before:bg-gray-950 before:duration-300 group-hover:before:scale-110">
           <span className="relative flex items-center gap-3">
-            <svg
+            {/* <svg
               xmlns="http://www.w3.org/2000/svg"
               width={20}
               height={20}
@@ -92,17 +92,16 @@ export default function ModalVideo({
                   <stop offset={1} stopColor="#6366F1" stopOpacity=".72" />
                 </linearGradient>
               </defs>
-            </svg>
+            </svg> */}
             <span className="text-sm font-medium leading-tight text-gray-300">
-              Watch Demo
-              <span className="text-gray-600"> - </span>
-              3:47
+              TreeHacks 2025
             </span>
           </span>
         </span>
       </button>
       {/* End: Video thumbnail */}
 
+      {/* Video modal disabled
       <Dialog
         initialFocus={videoRef}
         open={modalOpen}
@@ -123,7 +122,6 @@ export default function ModalVideo({
                 width={videoWidth}
                 height={videoHeight}
                 loop
-                controls
               >
                 <source src={video} type="video/mp4" />
                 Your browser does not support the video tag.
@@ -132,6 +130,7 @@ export default function ModalVideo({
           </div>
         </div>
       </Dialog>
+      */}
     </div>
   );
 }
