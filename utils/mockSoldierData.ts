@@ -144,7 +144,6 @@ export function updateSoldierPositions(soldiers: MockSoldier[]): MockSoldier[] {
       // Reset to initial position after 15 steps (30 seconds)
       return {
         ...soldier,
-      ...soldier,
       currentPosition: soldier.initialPosition,
       coordinates: {
         lat: soldier.initialPosition[0],
@@ -160,7 +159,6 @@ export function updateSoldierPositions(soldiers: MockSoldier[]): MockSoldier[] {
     }
 
     return {
-      ...soldier,
       ...soldier,
       currentPosition: generateStep(soldier.currentPosition),
       coordinates: {

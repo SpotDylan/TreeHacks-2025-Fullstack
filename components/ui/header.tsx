@@ -80,20 +80,34 @@ export default function Header() {
             {/* Demo mode switch */}
             <div className="flex items-center gap-2 ml-8">
               <span className="text-sm text-gray-200">Demo Mode</span>
-              <Switch
-                checked={isDemoMode}
-                onChange={setIsDemoMode}
-                className={`${
-                  isDemoMode ? 'bg-indigo-600' : 'bg-gray-700'
-                } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none`}
-              >
-                <span className="sr-only">Toggle demo mode</span>
-                <span
+              <div className="relative group">
+                <Switch
+                  checked={isDemoMode}
+                  onChange={(value) => {
+                    // Only allow turning off demo mode if authenticated
+                    if (isAuthenticated || value === true) {
+                      setIsDemoMode(value);
+                    }
+                  }}
                   className={`${
-                    isDemoMode ? 'translate-x-6' : 'translate-x-1'
-                  } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                />
-              </Switch>
+                    isDemoMode ? 'bg-indigo-600' : 'bg-gray-700'
+                  } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                    !isAuthenticated && isDemoMode ? 'cursor-not-allowed opacity-75' : ''
+                  }`}
+                >
+                  <span className="sr-only">Toggle demo mode</span>
+                  <span
+                    className={`${
+                      isDemoMode ? 'translate-x-6' : 'translate-x-1'
+                    } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                  />
+                </Switch>
+                {!isAuthenticated && isDemoMode && (
+                  <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-1 text-sm text-gray-200 bg-gray-800 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    Sign in to disable demo mode
+                  </div>
+                )}
+              </div>
             </div>
           </nav>
 

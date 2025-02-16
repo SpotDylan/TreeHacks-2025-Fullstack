@@ -1,6 +1,7 @@
-        'use client';
+'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Soldier } from '../command-center/page';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useSelectedSoldier } from '@/contexts/SelectedSoldierContext';
 import { mockSoldiers, updateSoldierPositions, MockSoldier } from '@/utils/mockSoldierData';
@@ -15,7 +16,11 @@ const OVERVIEW_MIN_ZOOM = 8;
 const OVERVIEW_MAX_ZOOM = 16;
 const OVERVIEW_ZOOM_OFFSET = 4;
 
-const MapComponent = () => {
+interface MapComponentProps {
+  realSoldiers: Soldier[];
+}
+
+const MapComponent: React.FC<MapComponentProps> = ({ realSoldiers }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const minimapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -23,7 +28,8 @@ const MapComponent = () => {
   const [bounds, setBounds] = useState<mapboxgl.LngLatBounds | null>(null);
   const [soldiers, setSoldiers] = useState(mockSoldiers);
   const { isDemoMode } = useDemoMode();
-  const { setSelectedSoldier } = useSelectedSoldier();
+  const { selectedSoldier, setSelectedSoldier } = useSelectedSoldier();
+  const sourcesInitialized = useRef<{ [key: string]: boolean }>({});
 
   // Calculate the appropriate zoom level for the minimap
   const buildOverviewZoom = (mainZoom: number): number => {
@@ -99,18 +105,9 @@ const MapComponent = () => {
     }
   };
 
+  // Initialize map (only once)
   useEffect(() => {
-    if (!mapContainer.current || !minimapContainer.current) return; // wait for containers to be ready
-
-    // Cleanup previous instances
-    if (map.current) {
-      map.current.remove();
-      map.current = null;
-    }
-    if (minimap.current) {
-      minimap.current.remove();
-      minimap.current = null;
-    }
+    if (!mapContainer.current || !minimapContainer.current || map.current) return;
 
     // Initialize new instances
     mapboxgl.accessToken = "pk.eyJ1IjoiYnBhY2h1Y2EiLCJhIjoiY2lxbGNwaXdmMDAweGZxbmg5OGx2YWo5aSJ9.zda7KLJF3TH84UU6OhW16w";
@@ -129,161 +126,42 @@ const MapComponent = () => {
       container: minimapContainer.current,
       style: "mapbox://styles/mapbox/dark-v11",
       zoom: 10,
-      interactive: false // Disable minimap interaction
+      interactive: false
     });
 
     // Wait for both maps to load
     Promise.all([
       new Promise(resolve => map.current?.on('style.load', resolve)),
       new Promise(resolve => minimap.current?.on('style.load', resolve))
-    ]).then(async () => {
-      // Get initial position based on mode
-      const initialPosition = isDemoMode 
-        ? [-122.1701, 37.4277] // Stanford coordinates
-        : await (async () => {
-            try {
-              const response = await fetch(
-                'https://api.wheretheiss.at/v1/satellites/25544',
-                { method: 'GET' }
-              );
-              const { latitude, longitude } = await response.json();
-              return [longitude, latitude] as [number, number];
-            } catch (err) {
-              console.error('Error fetching ISS location:', err);
-              return [0, 0] as [number, number];
-            }
-          })();
-      
+    ]).then(() => {
       if (map.current && minimap.current) {
-        const center = initialPosition as [number, number];
-        map.current.setCenter(center);
-        minimap.current.setCenter(center);
-        map.current.setZoom(isDemoMode ? 14 : 2);
-        minimap.current.setZoom(isDemoMode ? 12 : 1);
-        
-        if (isDemoMode) {
-          // Add pulsing dots and click handlers for all soldiers
-          soldiers.forEach((soldier, index) => {
-            const position: [number, number] = [soldier.currentPosition[1], soldier.currentPosition[0]];
-            addPulsingDot(map.current!, position, `soldier-${index}`);
+        // Set initial position
+        const initialPosition = isDemoMode 
+          ? [-122.1701, 37.4277] // Stanford coordinates
+          : realSoldiers.length > 0 
+            ? [realSoldiers[0].coordinates.lng, realSoldiers[0].coordinates.lat]
+            : [-122.1701, 37.4277];
 
-            // Add click handler for the layer
-            map.current!.on('click', `layer-with-soldier-${index}-dot`, (e) => {
-              if (e.features && e.features[0]) {
-                const clickedSoldier = soldiers.find(s => s.id === `demo-soldier-${index + 1}`);
-                if (clickedSoldier) {
-                  setSelectedSoldier(clickedSoldier);
-                }
-              }
-            });
+        map.current.setCenter(initialPosition as [number, number]);
+        minimap.current.setCenter(initialPosition as [number, number]);
+        map.current.setZoom(14);
+        minimap.current.setZoom(12);
 
-            // Change cursor to pointer when hovering over soldier dots
-            map.current!.on('mouseenter', `layer-with-soldier-${index}-dot`, () => {
-              map.current!.getCanvas().style.cursor = 'pointer';
-            });
+        map.current.addControl(new MapboxStyleSwitcherControl() as any);
 
-            map.current!.on('mouseleave', `layer-with-soldier-${index}-dot`, () => {
-              map.current!.getCanvas().style.cursor = '';
-            });
-          });
+        // Initial bounds update
+        updateMinimapBounds();
 
-          // Update soldier positions every 2 seconds
-          const updateInterval = setInterval(() => {
-            if (map.current && minimap.current) {
-              const updatedSoldiers = updateSoldierPositions(soldiers);
-              setSoldiers(updatedSoldiers);
-
-              // Update each soldier's position
-              updatedSoldiers.forEach((soldier, index) => {
-                const source = map.current!.getSource(`soldier-${index}-point`) as mapboxgl.GeoJSONSource | undefined;
-                if (source) {
-                  source.setData({
-                    type: 'FeatureCollection',
-                    features: [
-                      {
-                        type: 'Feature',
-                        geometry: {
-                          type: 'Point',
-                          coordinates: [soldier.currentPosition[1], soldier.currentPosition[0]] as [number, number]
-                        },
-                        properties: {
-                          title: soldier.name,
-                          description: soldier.event
-                        }
-                      }
-                    ]
-                  });
-                }
-              });
-            }
-          }, 2000);
-
-          return () => clearInterval(updateInterval);
-        } else {
-          // Add pulsing dot at ISS location
-          addPulsingDot(map.current, initialPosition as [number, number]);
-
-          // Update ISS position every 2 seconds
-          const updateInterval = setInterval(async () => {
-            try {
-              const response = await fetch(
-                'https://api.wheretheiss.at/v1/satellites/25544',
-                { method: 'GET' }
-              );
-              const { latitude, longitude } = await response.json();
-              const newPosition = [longitude, latitude] as [number, number];
-              
-              if (map.current && minimap.current) {
-                // Update the dot's position
-                const source = map.current.getSource('dot-point') as mapboxgl.GeoJSONSource;
-                if (source) {
-                  source.setData({
-                    type: 'FeatureCollection',
-                    features: [
-                      {
-                        type: 'Feature',
-                        geometry: {
-                          type: 'Point',
-                          coordinates: newPosition
-                        },
-                        properties: {}
-                      }
-                    ]
-                  });
-
-                  // Fly to new position
-                  map.current.flyTo({
-                    center: newPosition,
-                    speed: 0.5
-                  });
-                  
-                  minimap.current.setCenter(newPosition);
-                }
-              }
-            } catch (err) {
-              console.error('Error updating ISS location:', err);
-            }
-          }, 2000);
-
-          return () => clearInterval(updateInterval);
-        }
-
+        // Sync minimap with main map movements
+        map.current.on('move', () => {
+          if (map.current && minimap.current) {
+            const center = map.current.getCenter();
+            minimap.current.setCenter(center);
+            minimap.current.setZoom(buildOverviewZoom(map.current.getZoom()));
+            updateMinimapBounds();
+          }
+        });
       }
-
-      map.current?.addControl(new MapboxStyleSwitcherControl() as any);
-
-      // Initial bounds update
-      updateMinimapBounds();
-
-      // Sync minimap with main map movements
-      map.current?.on('move', () => {
-        if (map.current && minimap.current) {
-          const center = map.current.getCenter();
-          minimap.current.setCenter(center);
-          minimap.current.setZoom(buildOverviewZoom(map.current.getZoom()));
-          updateMinimapBounds();
-        }
-      });
     });
 
     return () => {
@@ -296,7 +174,203 @@ const MapComponent = () => {
         minimap.current = null;
       }
     };
-  }, [isDemoMode, setSelectedSoldier]);
+  }, []); // Empty dependency array - only run once
+
+  // Helper function to update a single soldier's position
+  const updateSoldierPosition = (soldier: Soldier) => {
+    if (!map.current) return;
+
+    const position: [number, number] = [soldier.coordinates.lng, soldier.coordinates.lat];
+    const source = map.current.getSource(`soldier-${soldier.id}-point`) as mapboxgl.GeoJSONSource | undefined;
+    
+    if (source) {
+      // Remove old layers, images, and sources before updating
+      if (map.current.getLayer(`layer-with-soldier-${soldier.id}-dot`)) {
+        map.current.removeLayer(`layer-with-soldier-${soldier.id}-dot`);
+      }
+      if (map.current.hasImage(`pulsing-dot-soldier-${soldier.id}`)) {
+        map.current.removeImage(`pulsing-dot-soldier-${soldier.id}`);
+      }
+      if (map.current.getSource(`soldier-${soldier.id}-point`)) {
+        map.current.removeSource(`soldier-${soldier.id}-point`);
+      }
+
+      // Re-add the pulsing dot and source
+      addPulsingDot(map.current, position, `soldier-${soldier.id}`);
+
+      // Get the newly created source
+      const newSource = map.current.getSource(`soldier-${soldier.id}-point`) as mapboxgl.GeoJSONSource | undefined;
+      if (!newSource) return;
+
+      // Update the new source data
+      newSource.setData({
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            geometry: {
+              type: 'Point',
+              coordinates: position
+            },
+            properties: {
+              title: soldier.name,
+              description: soldier.events[0]?.description || ''
+            }
+          }
+        ]
+      });
+
+      // Handle map centering
+      if (selectedSoldier && selectedSoldier.id === soldier.id) {
+        map.current.flyTo({
+          center: position,
+          speed: 0.5
+        });
+        minimap.current?.setCenter(position);
+      } else if (!selectedSoldier && soldier === realSoldiers[0]) {
+        map.current.flyTo({
+          center: position,
+          speed: 0.5
+        });
+        minimap.current?.setCenter(position);
+      }
+    }
+  };
+
+  // Handle demo mode updates
+  useEffect(() => {
+    if (!map.current || !isDemoMode) return;
+
+    // Wait for style to load before adding features
+    if (!map.current.isStyleLoaded()) {
+      map.current.once('style.load', () => {
+        // Add pulsing dots and click handlers for all soldiers
+        soldiers.forEach((soldier, index) => {
+          const position: [number, number] = [soldier.currentPosition[1], soldier.currentPosition[0]];
+          
+          if (!sourcesInitialized.current[`demo-${index}`]) {
+            addPulsingDot(map.current!, position, `soldier-${index}`);
+            sourcesInitialized.current[`demo-${index}`] = true;
+
+            // Add click handler for the layer
+            map.current!.on('click', `layer-with-soldier-${index}-dot`, (e) => {
+              if (e.features && e.features[0]) {
+                const clickedSoldier = soldiers.find(s => s.id === `demo-soldier-${index + 1}`);
+                if (clickedSoldier) {
+                  setSelectedSoldier(clickedSoldier as any);
+                }
+              }
+            });
+
+            // Change cursor to pointer when hovering over soldier dots
+            map.current!.on('mouseenter', `layer-with-soldier-${index}-dot`, () => {
+              map.current!.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.current!.on('mouseleave', `layer-with-soldier-${index}-dot`, () => {
+              map.current!.getCanvas().style.cursor = '';
+            });
+          }
+        });
+      });
+      return;
+    }
+
+    // Update soldier positions every 2 seconds
+    const updateInterval = setInterval(() => {
+      if (map.current && map.current.isStyleLoaded()) {
+        const updatedSoldiers = updateSoldierPositions(soldiers);
+        setSoldiers(updatedSoldiers);
+
+        // Update each soldier's position
+        updatedSoldiers.forEach((soldier, index) => {
+          const source = map.current!.getSource(`soldier-${index}-point`) as mapboxgl.GeoJSONSource | undefined;
+          if (source) {
+            source.setData({
+              type: 'FeatureCollection',
+              features: [
+                {
+                  type: 'Feature',
+                  geometry: {
+                    type: 'Point',
+                    coordinates: [soldier.currentPosition[1], soldier.currentPosition[0]] as [number, number]
+                  },
+                  properties: {
+                    title: soldier.name,
+                    description: soldier.event
+                  }
+                }
+              ]
+            });
+          }
+        });
+      }
+    }, 2000);
+
+    return () => clearInterval(updateInterval);
+  }, [isDemoMode, setSelectedSoldier, soldiers]);
+
+  // Handle real soldier updates
+  useEffect(() => {
+    if (!map.current || isDemoMode) return;
+
+    // Wait for style to load before adding features
+    if (!map.current.isStyleLoaded()) {
+      map.current.once('style.load', () => {
+        realSoldiers.forEach(soldier => {
+          const position: [number, number] = [soldier.coordinates.lng, soldier.coordinates.lat];
+          
+          if (!sourcesInitialized.current[soldier.id]) {
+            addPulsingDot(map.current!, position, `soldier-${soldier.id}`);
+            sourcesInitialized.current[soldier.id] = true;
+
+            // Add click handler for the layer
+            map.current!.on('click', `layer-with-soldier-${soldier.id}-dot`, () => {
+              setSelectedSoldier(soldier as any);
+            });
+
+            // Change cursor to pointer when hovering over soldier dots
+            map.current!.on('mouseenter', `layer-with-soldier-${soldier.id}-dot`, () => {
+              map.current!.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.current!.on('mouseleave', `layer-with-soldier-${soldier.id}-dot`, () => {
+              map.current!.getCanvas().style.cursor = '';
+            });
+          }
+
+          updateSoldierPosition(soldier);
+        });
+      });
+      return;
+    }
+
+    // Add pulsing dots for all real soldiers
+    realSoldiers.forEach(soldier => {
+      const position: [number, number] = [soldier.coordinates.lng, soldier.coordinates.lat];
+      
+      if (!sourcesInitialized.current[soldier.id]) {
+        addPulsingDot(map.current!, position, `soldier-${soldier.id}`);
+        sourcesInitialized.current[soldier.id] = true;
+
+        // Add click handler for the layer
+        map.current!.on('click', `layer-with-soldier-${soldier.id}-dot`, () => {
+          setSelectedSoldier(soldier as any);
+        });
+
+        // Change cursor to pointer when hovering over soldier dots
+        map.current!.on('mouseenter', `layer-with-soldier-${soldier.id}-dot`, () => {
+          map.current!.getCanvas().style.cursor = 'pointer';
+        });
+
+        map.current!.on('mouseleave', `layer-with-soldier-${soldier.id}-dot`, () => {
+          map.current!.getCanvas().style.cursor = '';
+        });
+      }
+
+      updateSoldierPosition(soldier);
+    });
+  }, [isDemoMode, realSoldiers, selectedSoldier, setSelectedSoldier]);
 
   return (
     <div style={{ position: 'relative' }}>

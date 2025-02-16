@@ -44,12 +44,6 @@ export async function middleware(request: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // If there's no session and the user is trying to access a protected route
-  if (!session && request.nextUrl.pathname.startsWith('/command-center')) {
-    const redirectUrl = new URL('/signin', request.url)
-    return NextResponse.redirect(redirectUrl)
-  }
-
   // If there's a session and the user is trying to access auth routes
   if (session && (
     request.nextUrl.pathname.startsWith('/signin') ||
@@ -65,7 +59,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/command-center/:path*',
     '/signin',
     '/signup',
     '/reset-password',

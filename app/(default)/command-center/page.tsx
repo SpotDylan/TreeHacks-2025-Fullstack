@@ -10,7 +10,7 @@ import { useDemoMode } from "@/contexts/DemoModeContext";
 import { useSelectedSoldier } from "@/contexts/SelectedSoldierContext";
 
 // Soldier type definition
-interface Soldier {
+export interface Soldier {
   id: string;
   name: string;
   codeName: string;
@@ -41,8 +41,8 @@ interface Soldier {
 export default function CommandCenter() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [hasLocation, setHasLocation] = useState(false);
-  const [realSoldier, setRealSoldier] = useState<Soldier | null>(null);
-  const { isDemoMode } = useDemoMode();
+  const [realSoldiers, setRealSoldiers] = useState<Soldier[]>([]);
+  const { isDemoMode, setIsDemoMode } = useDemoMode();
   const { selectedSoldier } = useSelectedSoldier();
   const supabase = createClient();
 
@@ -50,55 +50,42 @@ export default function CommandCenter() {
   useEffect(() => {
     if (isDemoMode) return; // Don't poll in demo mode
 
-    const pollLocation = async () => {
+    const pollSoldiers = async () => {
       try {
-        const response = await fetch('/api/update-location');
-        if (!response.ok) {
-          // If we get a 404, it means no location data yet - this is expected
-          if (response.status === 404) {
-            return;
-          }
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        if (data.latitude && data.longitude) {
+        // Fetch all soldiers from Supabase
+        const { data: soldiersData, error } = await supabase
+          .from('soldiers')
+          .select('*');
+
+        if (error) throw error;
+
+        if (soldiersData && soldiersData.length > 0) {
           setHasLocation(true);
           
-          try {
-            // Fetch soldier data from Supabase using hardcoded ID
-            const { data: soldierData, error } = await supabase
-              .from('soldiers')
-              .select('*')
-              .eq('id', '1234')
-              .single();
+          // Transform the data to match the Soldier interface
+          const transformedSoldiers = soldiersData.map(soldier => ({
+            id: soldier.id,
+            name: soldier.name,
+            codeName: soldier.code_name,
+            rank: soldier.rank,
+            unit: soldier.unit,
+            heartRate: parseInt(soldier.heart_rate),
+            lastPing: new Date(soldier.last_ping),
+            coordinates: {
+              lat: parseFloat(soldier.latitude),
+              lng: parseFloat(soldier.longitude)
+            },
+            ppgWaveform: soldier.ppg_waveform,
+            weight: soldier.weight,
+            height: soldier.height,
+            bloodType: soldier.blood_type,
+            allergies: soldier.allergies,
+            medications: soldier.medications,
+            preExistingConditions: soldier.pre_existing_conditions,
+            events: soldier.events
+          }));
 
-            if (error) throw error;
-
-            // Update soldier location in Supabase
-            await supabase
-              .from('soldiers')
-              .update({
-                coordinates: {
-                  lat: data.latitude,
-                  lng: data.longitude
-                },
-                lastPing: new Date().toISOString()
-              })
-              .eq('id', '1234');
-
-            // Update local state
-            setRealSoldier({
-              ...soldierData,
-              coordinates: {
-                lat: data.latitude,
-                lng: data.longitude
-              },
-              lastPing: new Date()
-            });
-          } catch (supabaseError) {
-            console.error('Supabase error:', supabaseError);
-          }
+          setRealSoldiers(transformedSoldiers);
         }
       } catch (error) {
         // Only log non-404 errors
@@ -109,31 +96,51 @@ export default function CommandCenter() {
     };
 
     // Poll every 5 seconds
-    const interval = setInterval(pollLocation, 5000);
-    pollLocation(); // Initial poll
+    const interval = setInterval(pollSoldiers, 5000);
+    pollSoldiers(); // Initial poll
 
     return () => clearInterval(interval);
   }, [isDemoMode, supabase]);
 
+  // Check authentication and force demo mode for unauthenticated users
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
+      const isAuth = !!session;
+      setIsAuthenticated(isAuth);
+      
+      // Force demo mode on for unauthenticated users
+      if (!isAuth) {
+        setIsDemoMode(true);
+      }
     };
 
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
+      const isAuth = !!session;
+      setIsAuthenticated(isAuth);
+      
+      // Force demo mode on for unauthenticated users
+      if (!isAuth) {
+        setIsDemoMode(true);
+      }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase.auth]);
+  }, [supabase.auth, setIsDemoMode]);
+
+  // Prevent turning off demo mode when not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !isDemoMode) {
+      setIsDemoMode(true);
+    }
+  }, [isAuthenticated, isDemoMode, setIsDemoMode]);
 
   // Determine which soldier data to use
-  const soldierData = isDemoMode ? (selectedSoldier || null) : realSoldier;
+  const soldierData = isDemoMode ? (selectedSoldier || null) : (realSoldiers.find(s => s.id === selectedSoldier?.id) || null);
 
   return (
     <>
@@ -148,11 +155,11 @@ export default function CommandCenter() {
             </div>
             
             {/* Command center content */}
-            {isDemoMode || (hasLocation && soldierData) ? (
+            {isDemoMode || hasLocation ? (
               <div className="space-y-8">
                 <div className="flex gap-8">
                   <div className="flex-1 min-w-0">
-                    <MapComponent />
+                    <MapComponent realSoldiers={isDemoMode ? [] : realSoldiers} />
                   </div>
                   <div className="flex gap-6">
                     <div className="flex-shrink-0">
@@ -164,7 +171,7 @@ export default function CommandCenter() {
                   </div>
                 </div>
                 <div className="w-full">
-                  {isDemoMode && !selectedSoldier ? (
+                  {!selectedSoldier ? (
                     <div className="w-full p-6 rounded-xl bg-gray-950/50 border border-indigo-800/20">
                       <p className="text-center text-gray-400">
                         Click on a soldier dot to view their details
@@ -175,13 +182,7 @@ export default function CommandCenter() {
                   )}
                 </div>
               </div>
-            ) : (
-              <div className="w-full p-6 rounded-xl bg-gray-950/50 border border-indigo-800/20">
-                <p className="text-center text-gray-400">
-                  All users are offline
-                </p>
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
       </section>
