@@ -57,7 +57,7 @@ export default function Features() {
           </div>
           {/* Items */}
           <div className="mx-auto grid max-w-sm gap-12 sm:max-w-none sm:grid-cols-2 md:gap-x-14 md:gap-y-16 lg:grid-cols-3">
-            <article>
+            {/* <article>
               <svg
                 className="mb-3 fill-indigo-500"
                 xmlns="http://www.w3.org/2000/svg"
@@ -71,7 +71,7 @@ export default function Features() {
                 />
               </svg>
               <h3 className="mb-1 font-nacelle text-[1rem] font-semibold text-gray-200">
-                Project Milestones
+                  GENERIC TITLE
               </h3>
               <p className="text-indigo-200/65">
                 Track progress across custom flows for your team. Find the right
@@ -89,7 +89,7 @@ export default function Features() {
                 <path d="M19 6H0v2h17v8H7v-6H5v8h19v-2h-5V6Z" />
               </svg>
               <h3 className="mb-1 font-nacelle text-[1rem] font-semibold text-gray-200">
-                Team Views
+                GENERIC TITLE
               </h3>
               <p className="text-indigo-200/65">
                 Track progress across custom flows for your team. Find the right
@@ -110,13 +110,13 @@ export default function Features() {
                 />
               </svg>
               <h3 className="mb-1 font-nacelle text-[1rem] font-semibold text-gray-200">
-                Advanced Search
+                GENERIC TITLE
               </h3>
               <p className="text-indigo-200/65">
                 Track progress across custom flows for your team. Find the right
                 balance for the user, privacy and security.
               </p>
-            </article>
+            </article> */}
           </div>
         </div>
       </div>
