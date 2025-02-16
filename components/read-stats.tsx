@@ -93,7 +93,6 @@ export default function ReadStats({ soldier }: { soldier: SoldierInfo }) {
           </h2>
           <div className="space-y-2 text-indigo-100/80">
             <p>Heart Rate: {soldier.heartRate} BPM</p>
-            <p className="text-sm text-indigo-300/60 mb-1">PPG Waveform</p>
             <div className="h-16 w-full">
               <svg className="h-full w-full" viewBox="0 0 200 100" preserveAspectRatio="none">
                 <path
