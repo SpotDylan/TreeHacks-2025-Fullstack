@@ -3,81 +3,117 @@
 import { useEffect, useState } from "react";
 import PageIllustration from "@/components/page-illustration";
 import MapComponent from "./map";
-import EventCarousel from "./event-carousel";
 import SoldierTimeline from "@/components/soldier-timeline";
 import ReadStats from "@/components/read-stats";
 import { createClient } from "@/utils/supabase/client";
+import { useDemoMode } from "@/contexts/DemoModeContext";
+import { useSelectedSoldier } from "@/contexts/SelectedSoldierContext";
 
-// Mock data for demonstration
-const mockSoldier = {
-  name: "John Smith",
-  codeName: "Ghost",
-  rank: "Staff Sergeant",
-  unit: "1st Special Forces Group",
-  heartRate: 72,
-  lastPing: new Date(),
+// Soldier type definition
+interface Soldier {
+  id: string;
+  name: string;
+  codeName: string;
+  rank: string;
+  unit: string;
+  heartRate: number;
+  lastPing: Date;
   coordinates: {
-    lat: 37.4275,
-    lng: -122.1697
-  },
-  ppgWaveform: [0.2, 0.3, 0.5, 0.8, 1.0, 0.8, 0.5, 0.3, 0.2, 0.1, 0.2, 0.3, 0.5, 0.8, 1.0, 0.8, 0.5, 0.3, 0.2, 0.1],
-  // Medical Information
-  weight: "180 lbs",
-  height: "6'0\"",
-  bloodType: "O+",
-  allergies: ["Penicillin"],
-  medications: ["Ibuprofen PRN"],
-  preExistingConditions: ["Mild Asthma"],
-  // Events
-  events: [
-    {
-      id: '1',
-      type: 'status' as const,
-      timestamp: '2024-02-16T11:45:15Z', // 5 minutes ago
-      title: 'Entered Sector 7',
-      description: 'Soldier moved into new patrol zone'
-    },
-    {
-      id: '2',
-      type: 'agent' as const,
-      timestamp: '2024-02-16T11:12:15Z', // 15 minutes ago
-      title: 'Alpha Agent Administered',
-      description: 'Standard dose delivered successfully'
-    },
-    {
-      id: '3',
-      type: 'alert' as const,
-      timestamp: '2024-02-15T11:14:54Z', // 30 minutes ago
-      title: 'Elevated Heart Rate',
-      description: 'BPM increased to 95, monitoring situation'
-    },
-    {
-      id: '4',
-      type: 'status' as const,
-      timestamp: '2024-02-14T09:42:13Z', // 45 minutes ago
-      title: 'Mission Started',
-      description: 'Deployed to Stanford campus area'
-    },
-    {
-      id: '5',
-      type: 'status' as const,
-      timestamp: '2024-02-14T09:42:13Z', // 45 minutes ago
-      title: 'Mission Started',
-      description: 'Deployed to Stanford campus area'
-    },
-    {
-      id: '6',
-      type: 'status' as const,
-      timestamp: '2024-02-14T09:42:13Z', // 45 minutes ago
-      title: 'Mission Started',
-      description: 'Deployed to Stanford campus area'
-    }
-  ]
-};
+    lat: number;
+    lng: number;
+  };
+  ppgWaveform: number[];
+  weight: string;
+  height: string;
+  bloodType: string;
+  allergies: string[];
+  medications: string[];
+  preExistingConditions: string[];
+  events: Array<{
+    id: string;
+    type: 'status' | 'agent' | 'alert';
+    timestamp: string;
+    title: string;
+    description: string;
+  }>;
+}
 
 export default function CommandCenter() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasLocation, setHasLocation] = useState(false);
+  const [realSoldier, setRealSoldier] = useState<Soldier | null>(null);
+  const { isDemoMode } = useDemoMode();
+  const { selectedSoldier } = useSelectedSoldier();
   const supabase = createClient();
+
+  // Poll for location updates
+  useEffect(() => {
+    if (isDemoMode) return; // Don't poll in demo mode
+
+    const pollLocation = async () => {
+      try {
+        const response = await fetch('/api/update-location');
+        if (!response.ok) {
+          // If we get a 404, it means no location data yet - this is expected
+          if (response.status === 404) {
+            return;
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        if (data.latitude && data.longitude) {
+          setHasLocation(true);
+          
+          try {
+            // Fetch soldier data from Supabase using hardcoded ID
+            const { data: soldierData, error } = await supabase
+              .from('soldiers')
+              .select('*')
+              .eq('id', '1234')
+              .single();
+
+            if (error) throw error;
+
+            // Update soldier location in Supabase
+            await supabase
+              .from('soldiers')
+              .update({
+                coordinates: {
+                  lat: data.latitude,
+                  lng: data.longitude
+                },
+                lastPing: new Date().toISOString()
+              })
+              .eq('id', '1234');
+
+            // Update local state
+            setRealSoldier({
+              ...soldierData,
+              coordinates: {
+                lat: data.latitude,
+                lng: data.longitude
+              },
+              lastPing: new Date()
+            });
+          } catch (supabaseError) {
+            console.error('Supabase error:', supabaseError);
+          }
+        }
+      } catch (error) {
+        // Only log non-404 errors
+        if (error instanceof Error && !error.message.includes('404')) {
+          console.error('Error polling location:', error);
+        }
+      }
+    };
+
+    // Poll every 5 seconds
+    const interval = setInterval(pollLocation, 5000);
+    pollLocation(); // Initial poll
+
+    return () => clearInterval(interval);
+  }, [isDemoMode, supabase]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -95,38 +131,57 @@ export default function CommandCenter() {
       subscription.unsubscribe();
     };
   }, [supabase.auth]);
+
+  // Determine which soldier data to use
+  const soldierData = isDemoMode ? (selectedSoldier || null) : realSoldier;
+
   return (
     <>
       <PageIllustration multiple />
       <section>
         <div className="px-16">
-          {/* Hero content */}
           <div className="py-12 md:py-16">
-            {/* Section header */}
             <div className="pb-6 text-center">
               <h1 data-aos="fade-up" className="animate-[gradient_6s_linear_infinite] bg-[linear-gradient(to_right,var(--color-gray-200),var(--color-indigo-200),var(--color-gray-50),var(--color-indigo-300),var(--color-gray-200))] bg-[length:200%_auto] bg-clip-text pb-5 font-nacelle text-4xl font-semibold text-transparent md:text-5xl">
                 Aegis Command Center
               </h1>
             </div>
+            
             {/* Command center content */}
-            <div className="space-y-8">
-              <div className="flex gap-8">
-                <div className="flex-1 min-w-0">
-                  <MapComponent />
-                </div>
-                <div className="flex gap-6">
-                  <div className="flex-shrink-0">
-                    <SoldierTimeline 
-                      events={mockSoldier.events} 
-                      soldierId={mockSoldier.codeName}
-                    />
+            {isDemoMode || (hasLocation && soldierData) ? (
+              <div className="space-y-8">
+                <div className="flex gap-8">
+                  <div className="flex-1 min-w-0">
+                    <MapComponent />
+                  </div>
+                  <div className="flex gap-6">
+                    <div className="flex-shrink-0">
+                      <SoldierTimeline 
+                        events={soldierData?.events || []} 
+                        soldierId={soldierData?.codeName || ''}
+                      />
+                    </div>
                   </div>
                 </div>
+                <div className="w-full">
+                  {isDemoMode && !selectedSoldier ? (
+                    <div className="w-full p-6 rounded-xl bg-gray-950/50 border border-indigo-800/20">
+                      <p className="text-center text-gray-400">
+                        Click on a soldier dot to view their details
+                      </p>
+                    </div>
+                  ) : (
+                    soldierData && <ReadStats soldier={soldierData} />
+                  )}
+                </div>
               </div>
-              <div className="w-full">
-                <ReadStats soldier={mockSoldier} />
+            ) : (
+              <div className="w-full p-6 rounded-xl bg-gray-950/50 border border-indigo-800/20">
+                <p className="text-center text-gray-400">
+                  All users are offline
+                </p>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>

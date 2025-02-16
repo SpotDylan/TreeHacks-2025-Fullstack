@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Switch } from "@headlessui/react";
+import { useDemoMode } from "@/contexts/DemoModeContext";
 import Logo from "./logo";
 import MobileMenu from "./mobile-menu";
 import { createClient } from "@/utils/supabase/client";
 
 export default function Header() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isDemoMode, setIsDemoMode } = useDemoMode();
   const router = useRouter();
   const supabase = createClient();
 
@@ -40,22 +43,14 @@ export default function Header() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="relative flex h-14 items-center justify-between gap-3 rounded-2xl bg-gray-900/90 px-3 before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(to_right,var(--color-gray-800),var(--color-gray-700),var(--color-gray-800))_border-box] before:[mask-composite:exclude_!important] before:[mask:linear-gradient(white_0_0)_padding-box,_linear-gradient(white_0_0)] after:absolute after:inset-0 after:-z-10 after:backdrop-blur-xs">
           {/* Site branding */}
-          <div className="flex flex-1 items-center">
+          <div className="flex items-center">
             <Logo />
           </div>
 
           {/* Desktop navigation */}
-          <nav className="hidden md:flex md:grow">
+          <nav className="hidden md:flex md:grow md:mr-4">
             {/* Desktop menu links */}
-            <ul className="flex grow flex-wrap items-center justify-center gap-4 text-sm lg:gap-8">
-              <li>
-                <Link
-                  href="/about"
-                  className="flex items-center px-2 py-1 text-gray-200 transition hover:text-indigo-500 lg:px-3"
-                >
-                  About Us
-                </Link>
-              </li>
+            <ul className="flex grow flex-wrap items-center justify-end gap-4 text-sm lg:gap-8">
               <li>
                 <Link
                   href="/"
@@ -74,14 +69,6 @@ export default function Header() {
               </li>
               <li>
                 <Link
-                  href="/help/frequently-asked-questions"
-                  className="flex items-center px-2 py-1 text-gray-200 transition hover:text-indigo-500 lg:px-3"
-                >
-                  Help Centre
-                </Link>
-              </li>
-              <li>
-                <Link
                   href="/contact"
                   className="flex items-center px-2 py-1 text-gray-200 transition hover:text-indigo-500 lg:px-3"
                 >
@@ -89,6 +76,25 @@ export default function Header() {
                 </Link>
               </li>
             </ul>
+
+            {/* Demo mode switch */}
+            <div className="flex items-center gap-2 ml-8">
+              <span className="text-sm text-gray-200">Demo Mode</span>
+              <Switch
+                checked={isDemoMode}
+                onChange={setIsDemoMode}
+                className={`${
+                  isDemoMode ? 'bg-indigo-600' : 'bg-gray-700'
+                } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none`}
+              >
+                <span className="sr-only">Toggle demo mode</span>
+                <span
+                  className={`${
+                    isDemoMode ? 'translate-x-6' : 'translate-x-1'
+                  } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                />
+              </Switch>
+            </div>
           </nav>
 
           {/* Desktop sign in/out links */}

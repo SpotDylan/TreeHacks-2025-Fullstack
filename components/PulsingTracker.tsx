@@ -80,16 +80,19 @@ export const createPulsingDot = (map: Map | null): PulsingDot => {
   };
 };
 
-export const addPulsingDot = (map: Map | null, coordinates: [number, number]) => {
+export const addPulsingDot = (map: Map | null, coordinates: [number, number], id: string = 'default') => {
   if (!map) return;
 
   const pulsingDot = createPulsingDot(map);
+  const imageId = `pulsing-dot-${id}`;
+  const sourceId = `${id}-point`;
+  const layerId = `layer-with-${id}-dot`;
   
   // Add the pulsing dot as a new image
-  map.addImage('pulsing-dot', pulsingDot as any, { pixelRatio: 2 });
+  map.addImage(imageId, pulsingDot as any, { pixelRatio: 2 });
 
   // Add the source and layer
-  map.addSource('dot-point', {
+  map.addSource(sourceId, {
     'type': 'geojson',
     'data': {
       'type': 'FeatureCollection',
@@ -100,18 +103,20 @@ export const addPulsingDot = (map: Map | null, coordinates: [number, number]) =>
             'type': 'Point',
             'coordinates': coordinates
           },
-          'properties': {}
+          'properties': {
+            'id': id
+          }
         }
       ]
     }
   });
 
   map.addLayer({
-    'id': 'layer-with-pulsing-dot',
+    'id': layerId,
     'type': 'symbol',
-    'source': 'dot-point',
+    'source': sourceId,
     'layout': {
-      'icon-image': 'pulsing-dot'
+      'icon-image': imageId
     }
   });
 };

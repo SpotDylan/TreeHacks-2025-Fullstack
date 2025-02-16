@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Search from '@/components/search'
 
 interface Event {
@@ -36,6 +36,12 @@ interface SoldierInfo {
 
 export default function ReadStats({ soldier }: { soldier: SoldierInfo }) {
   const [isLoading, setIsLoading] = useState(false)
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    // Trigger animation after mount
+    setIsVisible(true)
+  }, [])
 
   const handleAdministerAgent = async (agentType: string) => {
     setIsLoading(true)
@@ -54,7 +60,7 @@ export default function ReadStats({ soldier }: { soldier: SoldierInfo }) {
     <div className="w-full p-6 rounded-xl">
       <div className="grid grid-cols-4 gap-6">
         {/* Basic Info Section */}
-        <div className="rounded-xl bg-gray-950/50 p-4 border border-indigo-800/20 animate-fade-in">
+        <div className={`rounded-xl bg-gray-950/50 p-4 border border-indigo-800/20 transition-all duration-500 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
           <h2 className="animate-[gradient_6s_linear_infinite] bg-[linear-gradient(to_right,var(--color-indigo-200),var(--color-indigo-300),var(--color-indigo-100),var(--color-indigo-400),var(--color-indigo-200))] bg-[length:200%_auto] bg-clip-text pb-2 font-nacelle text-xl font-semibold text-transparent">
             Basic Information
           </h2>
@@ -68,7 +74,7 @@ export default function ReadStats({ soldier }: { soldier: SoldierInfo }) {
         </div>
 
         {/* Medical Info Section */}
-        <div className="rounded-xl bg-gray-950/50 p-4 border border-indigo-800/20 animate-fade-in [animation-delay:200ms]">
+        <div className={`rounded-xl bg-gray-950/50 p-4 border border-indigo-800/20 transition-all duration-500 delay-100 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
           <h2 className="animate-[gradient_6s_linear_infinite] bg-[linear-gradient(to_right,var(--color-indigo-200),var(--color-indigo-300),var(--color-indigo-100),var(--color-indigo-400),var(--color-indigo-200))] bg-[length:200%_auto] bg-clip-text pb-2 font-nacelle text-xl font-semibold text-transparent">
             Medical Information
           </h2>
@@ -81,7 +87,7 @@ export default function ReadStats({ soldier }: { soldier: SoldierInfo }) {
         </div>
 
         {/* Vitals Section */}
-        <div className="rounded-xl bg-gray-950/50 p-4 border border-indigo-800/20 animate-fade-in [animation-delay:400ms]">
+        <div className={`rounded-xl bg-gray-950/50 p-4 border border-indigo-800/20 transition-all duration-500 delay-200 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
           <h2 className="animate-[gradient_6s_linear_infinite] bg-[linear-gradient(to_right,var(--color-indigo-200),var(--color-indigo-300),var(--color-indigo-100),var(--color-indigo-400),var(--color-indigo-200))] bg-[length:200%_auto] bg-clip-text pb-2 font-nacelle text-xl font-semibold text-transparent">
             Current Status
           </h2>
@@ -109,7 +115,7 @@ export default function ReadStats({ soldier }: { soldier: SoldierInfo }) {
         </div>
 
         {/* Agent Controls Section */}
-        <div className="rounded-xl bg-gray-950/50 p-4 border border-indigo-800/20 animate-fade-in [animation-delay:600ms]">
+        <div className={`rounded-xl bg-gray-950/50 p-4 border border-indigo-800/20 transition-all duration-500 delay-300 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
           <h2 className="animate-[gradient_6s_linear_infinite] bg-[linear-gradient(to_right,var(--color-gray-200),var(--color-indigo-200),var(--color-gray-50),var(--color-indigo-300),var(--color-gray-200))] bg-[length:200%_auto] bg-clip-text pb-2 font-nacelle text-xl font-semibold text-transparent">
             Agent Controls
           </h2>

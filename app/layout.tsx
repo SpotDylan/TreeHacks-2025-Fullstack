@@ -1,9 +1,13 @@
 import "./css/style.css";
-
 import { Inter } from "next/font/google";
 import localFont from "next/font/local";
-
 import Header from "@/components/ui/header";
+import { Providers } from "@/components/providers";
+
+export const metadata = {
+  title: "Aegis",
+  description: "Building biochemical agent delivery systems",
+};
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,11 +42,6 @@ const nacelle = localFont({
   display: "swap",
 });
 
-export const metadata = {
-  title: "Aegis",
-  description: "Building biochemical agent delivery systems",
-};
-
 export default function RootLayout({
   children,
 }: {
@@ -53,10 +52,12 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${nacelle.variable} bg-gray-950 font-inter text-base text-gray-200 antialiased`}
       >
-        <div className="flex min-h-screen flex-col overflow-hidden supports-[overflow:clip]:overflow-clip">
-          <Header />
-          {children}
-        </div>
+        <Providers>
+          <div className="flex min-h-screen flex-col overflow-hidden supports-[overflow:clip]:overflow-clip">
+            <Header />
+            {children}
+          </div>
+        </Providers>
       </body>
     </html>
   );

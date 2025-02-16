@@ -1,6 +1,9 @@
         'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useSelectedSoldier } from '@/contexts/SelectedSoldierContext';
+import { mockSoldiers, updateSoldierPositions, MockSoldier } from '@/utils/mockSoldierData';
 import mapboxgl from 'mapbox-gl';
 import { MapboxStyleSwitcherControl } from "mapbox-gl-style-switcher";
 import "mapbox-gl-style-switcher/styles.css";
@@ -18,6 +21,9 @@ const MapComponent = () => {
   const map = useRef<mapboxgl.Map | null>(null);
   const minimap = useRef<mapboxgl.Map | null>(null);
   const [bounds, setBounds] = useState<mapboxgl.LngLatBounds | null>(null);
+  const [soldiers, setSoldiers] = useState(mockSoldiers);
+  const { isDemoMode } = useDemoMode();
+  const { setSelectedSoldier } = useSelectedSoldier();
 
   // Calculate the appropriate zoom level for the minimap
   const buildOverviewZoom = (mainZoom: number): number => {
@@ -131,68 +137,137 @@ const MapComponent = () => {
       new Promise(resolve => map.current?.on('style.load', resolve)),
       new Promise(resolve => minimap.current?.on('style.load', resolve))
     ]).then(async () => {
-      // Initial ISS location fetch
-      const getISSLocation = async () => {
-        try {
-          const response = await fetch(
-            'https://api.wheretheiss.at/v1/satellites/25544',
-            { method: 'GET' }
-          );
-          const { latitude, longitude } = await response.json();
-          return [longitude, latitude] as [number, number];
-        } catch (err) {
-          console.error('Error fetching ISS location:', err);
-          return [0, 0] as [number, number];
-        }
-      };
-
-      // Get initial position and set up map
-      const initialPosition = await getISSLocation();
+      // Get initial position based on mode
+      const initialPosition = isDemoMode 
+        ? [-122.1701, 37.4277] // Stanford coordinates
+        : await (async () => {
+            try {
+              const response = await fetch(
+                'https://api.wheretheiss.at/v1/satellites/25544',
+                { method: 'GET' }
+              );
+              const { latitude, longitude } = await response.json();
+              return [longitude, latitude] as [number, number];
+            } catch (err) {
+              console.error('Error fetching ISS location:', err);
+              return [0, 0] as [number, number];
+            }
+          })();
       
       if (map.current && minimap.current) {
-        map.current.setCenter(initialPosition);
-        minimap.current.setCenter(initialPosition);
-        map.current.setZoom(2); // Set zoom level for global view
-        minimap.current.setZoom(1);
+        const center = initialPosition as [number, number];
+        map.current.setCenter(center);
+        minimap.current.setCenter(center);
+        map.current.setZoom(isDemoMode ? 14 : 2);
+        minimap.current.setZoom(isDemoMode ? 12 : 1);
         
-        // Add pulsing dot at ISS location
-        addPulsingDot(map.current, initialPosition);
+        if (isDemoMode) {
+          // Add pulsing dots and click handlers for all soldiers
+          soldiers.forEach((soldier, index) => {
+            const position: [number, number] = [soldier.currentPosition[1], soldier.currentPosition[0]];
+            addPulsingDot(map.current!, position, `soldier-${index}`);
 
-        // Update ISS position every 2 seconds
-        const updateInterval = setInterval(async () => {
-          const newPosition = await getISSLocation();
-          
-          if (map.current && minimap.current) {
-            // Update the dot's position
-            const source = map.current.getSource('dot-point') as mapboxgl.GeoJSONSource;
-            if (source) {
-              source.setData({
-                type: 'FeatureCollection',
-                features: [
-                  {
-                    type: 'Feature',
-                    geometry: {
-                      type: 'Point',
-                      coordinates: newPosition
-                    },
-                    properties: {}
-                  }
-                ]
-              });
+            // Add click handler for the layer
+            map.current!.on('click', `layer-with-soldier-${index}-dot`, (e) => {
+              if (e.features && e.features[0]) {
+                const clickedSoldier = soldiers.find(s => s.id === `demo-soldier-${index + 1}`);
+                if (clickedSoldier) {
+                  setSelectedSoldier(clickedSoldier);
+                }
+              }
+            });
 
-              // Fly to new position
-              map.current.flyTo({
-                center: newPosition,
-                speed: 0.5
+            // Change cursor to pointer when hovering over soldier dots
+            map.current!.on('mouseenter', `layer-with-soldier-${index}-dot`, () => {
+              map.current!.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.current!.on('mouseleave', `layer-with-soldier-${index}-dot`, () => {
+              map.current!.getCanvas().style.cursor = '';
+            });
+          });
+
+          // Update soldier positions every 2 seconds
+          const updateInterval = setInterval(() => {
+            if (map.current && minimap.current) {
+              const updatedSoldiers = updateSoldierPositions(soldiers);
+              setSoldiers(updatedSoldiers);
+
+              // Update each soldier's position
+              updatedSoldiers.forEach((soldier, index) => {
+                const source = map.current!.getSource(`soldier-${index}-point`) as mapboxgl.GeoJSONSource | undefined;
+                if (source) {
+                  source.setData({
+                    type: 'FeatureCollection',
+                    features: [
+                      {
+                        type: 'Feature',
+                        geometry: {
+                          type: 'Point',
+                          coordinates: [soldier.currentPosition[1], soldier.currentPosition[0]] as [number, number]
+                        },
+                        properties: {
+                          title: soldier.name,
+                          description: soldier.event
+                        }
+                      }
+                    ]
+                  });
+                }
               });
-              
-              minimap.current.setCenter(newPosition);
             }
-          }
-        }, 2000);
+          }, 2000);
 
-        // Cleanup interval on unmount
-        return () => clearInterval(updateInterval);
+          return () => clearInterval(updateInterval);
+        } else {
+          // Add pulsing dot at ISS location
+          addPulsingDot(map.current, initialPosition as [number, number]);
+
+          // Update ISS position every 2 seconds
+          const updateInterval = setInterval(async () => {
+            try {
+              const response = await fetch(
+                'https://api.wheretheiss.at/v1/satellites/25544',
+                { method: 'GET' }
+              );
+              const { latitude, longitude } = await response.json();
+              const newPosition = [longitude, latitude] as [number, number];
+              
+              if (map.current && minimap.current) {
+                // Update the dot's position
+                const source = map.current.getSource('dot-point') as mapboxgl.GeoJSONSource;
+                if (source) {
+                  source.setData({
+                    type: 'FeatureCollection',
+                    features: [
+                      {
+                        type: 'Feature',
+                        geometry: {
+                          type: 'Point',
+                          coordinates: newPosition
+                        },
+                        properties: {}
+                      }
+                    ]
+                  });
+
+                  // Fly to new position
+                  map.current.flyTo({
+                    center: newPosition,
+                    speed: 0.5
+                  });
+                  
+                  minimap.current.setCenter(newPosition);
+                }
+              }
+            } catch (err) {
+              console.error('Error updating ISS location:', err);
+            }
+          }, 2000);
+
+          return () => clearInterval(updateInterval);
+        }
+
       }
 
       map.current?.addControl(new MapboxStyleSwitcherControl() as any);
@@ -221,7 +296,7 @@ const MapComponent = () => {
         minimap.current = null;
       }
     };
-  }, []);
+  }, [isDemoMode, setSelectedSoldier]);
 
   return (
     <div style={{ position: 'relative' }}>
