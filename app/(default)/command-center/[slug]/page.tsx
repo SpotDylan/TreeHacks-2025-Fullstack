@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import PageIllustration from "@/components/page-illustration";
 import Image from "next/image";
 import { CustomMDX } from "@/components/mdx/mdx";
-import RelatedPosts from "./related-posts";
 import Cta from "@/components/cta";
 
 export async function generateStaticParams() {
@@ -124,7 +123,6 @@ export default async function SinglePost(
               </article>
             </div>
 
-            <RelatedPosts />
           </div>
         </div>
       </section>
