@@ -68,14 +68,14 @@ export async function GET() {
 
 export async function PUT() {
   return NextResponse.json(
-    { error: 'Method not allowed' },
+    { error: 'rithvik error: Method not allowed' },
     { status: 405 }
   );
 }
 
 export async function DELETE() {
   return NextResponse.json(
-    { error: 'Method not allowed' },
+    { error: 'rithvik error: Method not allowed' },
     { status: 405 }
   );
 }

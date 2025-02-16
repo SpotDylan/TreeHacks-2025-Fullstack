@@ -1,7 +1,7 @@
 import Image from "next/image";
 import BlurredShapeGray from "@/public/images/blurred-shape-gray.svg";
 import BlurredShape from "@/public/images/blurred-shape.svg";
-import FeaturesImage from "@/public/images/features.png";
+import FeaturesImage from "@/public/images/features2.png";
 
 export default function Features() {
   return (
@@ -43,7 +43,7 @@ export default function Features() {
               Built on a modern stack of technologies
             </h2>
             <p className="text-lg text-indigo-200/65">
-              Aegis is powered by Mistral's software
+              Aegis is powered by frontier edge computing models including <a href="https://github.com/NVlabs/VILA" className="text-indigo-500 hover:text-indigo-400">NVIDIA's VILA</a>, finetuned with Apple and Terra API biometric sensors
             </p>
           </div>
           <div className="flex justify-center pb-4 md:pb-12" data-aos="fade-up">

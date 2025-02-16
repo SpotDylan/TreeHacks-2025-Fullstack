@@ -4,7 +4,7 @@ import { useState, Fragment } from "react";
 import Image from "next/image";
 import { TabGroup, Tab, TabList, TabPanel, TabPanels } from "@headlessui/react";
 import { Transition } from "@headlessui/react";
-import CarouselImg01 from "@/public/images/carousel-01.png";
+import CarouselImg01 from "@/public/images/carousel-011.png";
 import CarouselImg02 from "@/public/images/carousel-02.png";
 import CarouselImg03 from "@/public/images/carousel-03.png";
 import SmallTestimonialImg from "@/public/images/small-testimonial.jpg";
